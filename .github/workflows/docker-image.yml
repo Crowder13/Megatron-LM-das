@@ -39,7 +39,8 @@ jobs:
           BASE_IMAGE="${{ vars.HARBOR_SITE }}/hcu/base/dtk:${DTK_VERSION}-${OS_VERSION}-${PY_VERSION}"
           MEGATRON_VERSION=$(grep -oP "^__version__ = '\\K[^'\\+]+" setup.py | head -1)
           [ -n "${MEGATRON_VERSION}" ] || { echo "无法从 setup.py 解析版本号"; exit 1; }
-          PY=$(docker run --rm "${BASE_IMAGE}" python3 -c 'import sys; print("py3.%d"%sys.version_info.minor)' 2>/dev/null || echo py3.10)
+          # 基础镜像 entrypoint 会打 ASCII banner, 覆盖后 --entrypoint 直跑 python(不带 PATH 则用绝对路径)拿纯净输出
+          PY=$(docker run --rm --entrypoint /usr/local/bin/python3 "${BASE_IMAGE}" -c 'import sys; print("py3.%d"%sys.version_info.minor)' 2>/dev/null || echo py3.10)
           echo "BASE_IMAGE=${BASE_IMAGE}" >> "$GITHUB_ENV"
           # Dockerfile 用完整 pip 链接 (vars.PYPI_URL 只存 host 段, 在这里拼好整链再传入)
           echo "PIP_INDEX_URL=${{ vars.PYPI_URL }}/nightly/dtk${DTK_VERSION//./}/+simple/" >> "$GITHUB_ENV"
