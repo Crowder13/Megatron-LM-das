@@ -85,7 +85,10 @@ jobs:
         if: always() && steps.build_image.outcome == 'success'
         continue-on-error: true
         run: |
+          # nightly 索引 token 取无点写法 (26.10 -> dtk2610), 与上面 PIP_INDEX_URL 的拼接一致;
+          # 直接 ${DTK_VERSION} 会拼出 dtk26.10, 该索引不存在, pip 报 No matching distribution
           PIP_INDEX="${{ vars.PYPI_URL }}/nightly/dtk${{ env.DTK_VERSION }}/+simple/"
+          PIP_INDEX="${PIP_INDEX//26.10/2610}"
           PIP_HOST="$(echo "${{ vars.PYPI_URL }}" | sed 's#^http\?://##; s#:.*##')"
           INNER="set -e; \
             pip install --no-cache-dir cinotificate -i ${PIP_INDEX} --trusted-host ${PIP_HOST}; \
